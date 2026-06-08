@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+set -eu
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+APPLY=0
+BACKUP=0
+TOOL="all"
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  scripts/adopt [--tool codex|claude|gemini|generic|cursor|all] [--apply] [--backup]
+
+Default is dry-run. Nothing is written outside this repo unless --apply is set.
+USAGE
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --tool)
+      TOOL="${2:-}"
+      shift 2
+      ;;
+    --apply)
+      APPLY=1
+      shift
+      ;;
+    --backup)
+      BACKUP=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'unknown argument: %s\n' "$1" >&2
+      usage >&2
+      exit 64
+      ;;
+  esac
+done
+
+timestamp() {
+  date '+%Y%m%d%H%M%S'
+}
+
+say_cmd() {
+  if [ "$APPLY" -eq 1 ]; then
+    printf 'APPLY: %s\n' "$*"
+  else
+    printf 'DRY-RUN: %s\n' "$*"
+  fi
+}
+
+link_one() {
+  source="$1"
+  target="$2"
+  target_dir="$(dirname "$target")"
+
+  if [ ! -e "$source" ] && [ ! -L "$source" ]; then
+    printf 'missing source: %s\n' "$source" >&2
+    exit 1
+  fi
+
+  say_cmd "mkdir -p '$target_dir'"
+  say_cmd "ln -s '$source' '$target'"
+
+  if [ "$APPLY" -ne 1 ]; then
+    return
+  fi
+
+  mkdir -p "$target_dir"
+
+  if [ -e "$target" ] || [ -L "$target" ]; then
+    if [ "$BACKUP" -ne 1 ]; then
+      printf 'refusing to replace existing target without --backup: %s\n' "$target" >&2
+      exit 1
+    fi
+    backup="${target}.bak.$(timestamp)"
+    mv "$target" "$backup"
+    printf 'backed up %s -> %s\n' "$target" "$backup"
+  fi
+
+  ln -s "$source" "$target"
+}
+
+link_skills() {
+  target_root="$1"
+  for skill_dir in "$ROOT"/skills/*; do
+    [ -d "$skill_dir" ] || continue
+    link_one "$skill_dir" "$target_root/$(basename "$skill_dir")"
+  done
+}
+
+adopt_codex() {
+  printf '\n# Codex\n'
+  link_one "$ROOT/adapters/codex/AGENTS.md" "$HOME/.codex/AGENTS.md"
+  link_skills "$HOME/.codex/skills"
+}
+
+adopt_claude() {
+  printf '\n# Claude\n'
+  link_one "$ROOT/adapters/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+  link_skills "$HOME/.claude/skills"
+}
+
+adopt_gemini() {
+  printf '\n# Gemini\n'
+  link_one "$ROOT/adapters/gemini/GEMINI.md" "$HOME/.gemini/GEMINI.md"
+  link_skills "$HOME/.gemini/skills"
+}
+
+adopt_generic() {
+  printf '\n# Generic AGENTS\n'
+  link_one "$ROOT/adapters/generic/AGENTS.md" "$HOME/.agents/AGENTS.md"
+  link_skills "$HOME/.agents/skills"
+}
+
+adopt_cursor() {
+  printf '\n# Cursor\n'
+  printf 'Cursor app preferences are not edited by this script.\n'
+  printf 'Project rule template: %s\n' "$ROOT/adapters/cursor/rules/railsmith.mdc"
+  printf 'User-rules snippet: %s\n' "$ROOT/adapters/cursor/user-rules.md"
+}
+
+case "$TOOL" in
+  codex) adopt_codex ;;
+  claude) adopt_claude ;;
+  gemini) adopt_gemini ;;
+  generic) adopt_generic ;;
+  cursor) adopt_cursor ;;
+  all)
+    adopt_codex
+    adopt_claude
+    adopt_gemini
+    adopt_generic
+    adopt_cursor
+    ;;
+  *)
+    printf 'unknown tool: %s\n' "$TOOL" >&2
+    usage >&2
+    exit 64
+    ;;
+esac
+
+if [ "$APPLY" -eq 1 ]; then
+  printf '\nadoption applied\n'
+else
+  printf '\ndry-run only; re-run with --apply --backup to write links\n'
+fi

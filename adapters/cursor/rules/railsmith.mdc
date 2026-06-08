@@ -1,0 +1,12 @@
+---
+description: Railsmith auxiliary agent harness
+alwaysApply: true
+---
+
+# Railsmith
+
+Read `core/AGENTS.md` before non-trivial agent-assisted work.
+
+Use repo-local instructions first when present. Use Railsmith skills for architecture, review, controllers, services, PR workflow, and maintainer voice.
+
+If the user asks to adopt or sync Railsmith, follow the Harness Bootstrap Directive in the repository root `AGENTS.md`. For Cursor, prefer project-local `.cursor/rules/railsmith.mdc` and do not edit Cursor app preferences automatically.

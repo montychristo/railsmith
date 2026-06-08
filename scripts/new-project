@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -eu
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+FORCE=0
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  scripts/new-project <name> [repo-path] [--force]
+
+Creates projects/<name>/ from projects/_template without writing outside this repo.
+USAGE
+}
+
+if [ "$#" -gt 0 ]; then
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+  esac
+fi
+
+if [ "$#" -eq 0 ]; then
+  usage
+  exit 64
+fi
+
+NAME="$1"
+shift
+
+case "$NAME" in
+  *[!a-z0-9-]*|'')
+    printf 'name must use lowercase letters, digits, and hyphens: %s\n' "$NAME" >&2
+    exit 64
+    ;;
+esac
+
+REPO_PATH="/path/to/$NAME"
+if [ "$#" -gt 0 ] && [ "${1#--}" = "$1" ]; then
+  REPO_PATH="$1"
+  shift
+fi
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --force)
+      FORCE=1
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      printf 'unknown argument: %s\n' "$1" >&2
+      usage >&2
+      exit 64
+      ;;
+  esac
+done
+
+SPACE="$ROOT/projects/$NAME"
+TEMPLATE="$ROOT/projects/_template"
+
+if [ -e "$SPACE" ] && [ "$FORCE" -ne 1 ]; then
+  printf 'project space already exists: %s\n' "$SPACE" >&2
+  exit 1
+fi
+
+if [ -e "$SPACE" ]; then
+  rm -rf "$SPACE"
+fi
+
+cp -R "$TEMPLATE" "$SPACE"
+
+find "$SPACE" -type f | while IFS= read -r file; do
+  tmp="${file}.tmp"
+  sed \
+    -e "s|__NAME__|$NAME|g" \
+    -e "s|__REPO_PATH__|$REPO_PATH|g" \
+    "$file" > "$tmp"
+  mv "$tmp" "$file"
+done
+
+printf 'created project space: %s\n' "$SPACE"

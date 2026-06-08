@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -eu
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+failures=0
+
+fail() {
+  failures=$((failures + 1))
+  printf 'FAIL: %s\n' "$*" >&2
+}
+
+ok() {
+  printf 'ok: %s\n' "$*"
+}
+
+require_file() {
+  if [ -f "$ROOT/$1" ]; then
+    ok "$1"
+  else
+    fail "missing $1"
+  fi
+}
+
+require_dir() {
+  if [ -d "$ROOT/$1" ]; then
+    ok "$1"
+  else
+    fail "missing $1"
+  fi
+}
+
+require_file "README.md"
+require_file "AGENTS.md"
+require_file "core/AGENTS.md"
+require_file "docs/voice.md"
+require_file "profiles/chris/voice.md"
+require_file "adapters/codex/AGENTS.md"
+require_file "adapters/claude/CLAUDE.md"
+require_file "adapters/cursor/rules/railsmith.mdc"
+require_dir "skills"
+
+for script in "$ROOT"/scripts/*; do
+  [ -f "$script" ] || continue
+  if bash -n "$script"; then
+    ok "bash -n scripts/$(basename "$script")"
+  else
+    fail "syntax error in scripts/$(basename "$script")"
+  fi
+done
+
+for skill in "$ROOT"/skills/*/SKILL.md; do
+  [ -f "$skill" ] || continue
+  if grep -q '^name:' "$skill" && grep -q '^description:' "$skill"; then
+    ok "skill metadata $(basename "$(dirname "$skill")")"
+  else
+    fail "missing skill metadata in $skill"
+  fi
+done
+
+PRIVATE_SCAN_PATTERN="${RAILSMITH_PRIVATE_SCAN_PATTERN:-[a]tlassian\\.net|[/]Users/[^[:space:]]+|BEGIN [A-Z ]*PRIVATE KEY|xox[baprs]-}"
+
+if grep -R -nE "$PRIVATE_SCAN_PATTERN" "$ROOT" \
+  --exclude-dir=.git \
+  --exclude='doctor' >/tmp/railsmith-sensitive-scan.$$ 2>/dev/null; then
+  cat /tmp/railsmith-sensitive-scan.$$ >&2
+  rm -f /tmp/railsmith-sensitive-scan.$$
+  fail "public-safety scan found private/local references"
+else
+  rm -f /tmp/railsmith-sensitive-scan.$$
+  ok "public-safety scan"
+fi
+
+if [ "$failures" -gt 0 ]; then
+  printf '%s failure(s)\n' "$failures" >&2
+  exit 1
+fi
+
+printf 'doctor passed\n'

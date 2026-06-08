@@ -1,0 +1,6 @@
+name: __NAME__
+repo_path: __REPO_PATH__
+framework: rails
+notes:
+  - Keep this project space public-safe.
+  - Link to local repo docs instead of copying private knowledge here.

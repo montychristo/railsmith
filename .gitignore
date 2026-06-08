@@ -1,0 +1,6 @@
+.DS_Store
+*.tmp
+*.bak
+*.bak.*
+scratch/
+adoption-preview.txt

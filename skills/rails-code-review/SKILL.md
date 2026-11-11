@@ -1,6 +1,6 @@
 ---
 name: rails-code-review
-description: Use when reviewing Rails code, Rails PRs, local diffs, patches, review comments, architecture quality, Rails anti-patterns, tests, authorization, performance, or maintainability.
+description: Review a Rails diff or PR for evidenced defects and return a quality verdict, separate deployment risk, and verification gaps.
 ---
 
 # Rails Code Review
@@ -15,7 +15,7 @@ Read:
 
 Defaults:
 
-- Lead with findings, not preamble.
+- Lead with verdict and separate deployment risk, then actionable findings. Use the referenced contract; do not invent a second scoring scheme.
 - Prioritise correctness, authorization, data integrity, public contracts, edge cases, performance, tests, and scope.
 - Inspect nearby implementation and specs when available.
 - Ground findings in file/line evidence.

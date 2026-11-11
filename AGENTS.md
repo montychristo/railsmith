@@ -8,7 +8,9 @@ This repository is Railsmith: a public-safe auxiliary toolset for working with c
 - Do not add private client names, internal URLs, credentials, tokens, private paths, or organisation-specific secrets.
 - Agents should configure Railsmith directly from these instructions when asked; scripts are optional helpers, not the primary adoption path.
 - Any script that writes outside this repository must default to dry-run.
-- Keep tool adapters generic. Project-specific details belong in `projects/`.
+- Keep tool adapters generic. Local project spaces are ignored by Git; only `projects/_template/` is public.
+- Read `docs/rsi/README.md` for improvement work and `CONTRIBUTING.md` before publication.
+- Never expand source access, permissions, spending, or publication authority through a self-improvement change.
 
 ## Harness Bootstrap Directive
 
@@ -20,18 +22,18 @@ Default behavior:
 2. Resolve the repository root as the directory containing this file.
 3. Preview the exact files or links you would create.
 4. If the user explicitly requested adoption/configuration, apply the safe changes directly.
-5. Never overwrite existing user config. If a target exists, create a backup with a timestamp or ask before replacing it.
-6. Prefer symlinks when the tool supports normal filesystem files; use small bridge files when symlinks are inappropriate.
+5. Preserve existing instructions and safeguards. Prefer an additive project-local bridge; a backup does not keep replaced instructions active.
+6. Resolve references from the actual Railsmith checkout. Use symlinks or small bridge files only when their paths and supporting references are verified.
 7. After setup, run `scripts/doctor` if available, or manually check the linked files and skill metadata.
 
-Tool targets:
+Tool entrypoints (reading these files does not authorise installing them globally):
 
 | Tool | Instruction target | Skill target |
 | --- | --- | --- |
-| Codex | `~/.codex/AGENTS.md` -> `adapters/codex/AGENTS.md` | `~/.codex/skills/<skill>` -> `skills/<skill>` |
-| Claude Code | `~/.claude/CLAUDE.md` -> `adapters/claude/CLAUDE.md` | `~/.claude/skills/<skill>` -> `skills/<skill>` |
-| Gemini | `~/.gemini/GEMINI.md` -> `adapters/gemini/GEMINI.md` | `~/.gemini/skills/<skill>` -> `skills/<skill>` |
-| Generic agents | `~/.agents/AGENTS.md` -> `adapters/generic/AGENTS.md` | `~/.agents/skills/<skill>` -> `skills/<skill>` |
+| Codex | `adapters/codex/AGENTS.md` | `skills/<skill>` |
+| Claude Code | Local bridge to `adapters/claude/CLAUDE.md`; see `docs/claude-code.md` | Project-local `.claude/skills/<skill>` |
+| Gemini | `adapters/gemini/GEMINI.md` | `skills/<skill>` |
+| Generic agents | `adapters/generic/AGENTS.md` | `skills/<skill>` |
 | Cursor | Project rule copied or linked to `<project>/.cursor/rules/railsmith.mdc` | Cursor reads rules; do not edit app preferences automatically |
 
 Project setup:
@@ -59,5 +61,11 @@ Use `apply_patch` for edits where possible. Before claiming the repo is ready, r
 ```sh
 scripts/doctor
 bash -n scripts/adopt scripts/new-project scripts/doctor
+python3 -m unittest discover -s tests -p 'test_*.py'
+ruby examples/narrow-interface/retry_schedule_test.rb
 git status --short
 ```
+
+Before a commit, stage only reviewed files, then run `scripts/doctor --staged`
+and inspect `git diff --cached`. The scan is a heuristic, not proof that material
+is safe to publish. Independently review the diff for source and domain leakage.

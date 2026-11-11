@@ -1,9 +1,20 @@
-# Railsmith Claude Adapter
+# Railsmith for Claude Code
 
-Read `core/AGENTS.md` before non-trivial agent-assisted work.
+The Git-ignored `CLAUDE.local.md` adoption bridge imports the shared core from the resolved
+Railsmith checkout. Follow the target repository's own instructions first.
 
-Reusable skills live in `skills/`. Project spaces live in `projects/`.
+Before editing Rails code, inspect the relevant entry point, neighboring patterns,
+and tests. Invoke the smallest matching Railsmith skill; its supporting references
+are relative to the original skill directory, not the target app's working directory.
+Resolve symlinked skill paths before following those references.
 
-Repo-local `CLAUDE.md`, `AGENTS.md`, Cursor rules, or equivalent files override this adapter when more specific.
+Keep context focused: load architecture guidance for placement decisions, review
+guidance for reviews, and verification guidance for the changed risk surface.
+State observed behavior separately from assumptions, and never report a check as
+passed unless it ran against the relevant changes.
 
-If the user asks to adopt or sync Railsmith, follow the Harness Bootstrap Directive in the repository root `AGENTS.md`. Configure Claude Code directly; do not require the user to run `scripts/adopt`.
+If asked to adopt Railsmith, preview `scripts/adopt --project <target>` from the
+Railsmith checkout. Apply only within the requested target. Preserve existing
+instructions and skills; never replace global Claude configuration.
+
+See the source checkout's `docs/claude-code.md` for usage and compatibility notes.

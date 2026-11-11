@@ -4,3 +4,8 @@
 *.bak.*
 scratch/
 adoption-preview.txt
+.local/
+__pycache__/
+*.pyc
+projects/*
+!projects/_template/

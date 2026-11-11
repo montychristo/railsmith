@@ -43,3 +43,34 @@ Before adding a new abstraction, ask:
 - Is there real orchestration, or just one model operation?
 - Does the abstraction make the controller/model easier to understand?
 - Can the next maintainer predict where this code lives?
+
+## Narrow interface, deep implementation
+
+A caller should request a complete capability without coordinating its internal
+steps. State accepted inputs, result/error shape, owned invariants and side
+effects before introducing the boundary. Hide incidental decisions, not facts
+callers need to handle failure safely.
+
+Depth is useful logic behind a simple interface, not a target class length.
+Apply the deletion test: if removing a wrapper only removes indirection, prefer
+removing it. If removal spreads ordering, validation or recovery decisions into
+callers, the boundary may be earning its place.
+
+Keep pure decisions separate from persistence and transport when that makes
+their behaviour easier to prove. Do not make callers assemble a collection of
+tiny helpers into the actual operation. See the original
+[retry schedule example](../../examples/narrow-interface/README.md).
+
+## Structure and testing
+
+Use the app's existing namespace and folder conventions, with matching test
+paths and Zeitwerk-compatible constant names. Group a capability where its
+owner is clear; avoid a parallel framework, generic `utils` dumping ground, or
+new folder for every class. Run the repository's autoload check when moving
+constants, such as `bin/rails zeitwerk:check` if supported by that app.
+
+Test the public contract deeply: ordinary results, boundary values, malformed
+external inputs, invariants, partial failure and repeated execution where
+relevant. Keep tests resilient to internal rearrangement. Real database races,
+transaction behaviour and queue delivery need their own integration evidence;
+mocked calls cannot establish them.

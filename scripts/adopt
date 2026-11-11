@@ -1,151 +1,195 @@
 #!/usr/bin/env bash
 set -eu
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-APPLY=0
-BACKUP=0
-TOOL="all"
+RAILSMITH_ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
+exec python3 - "$RAILSMITH_ROOT" "$@" <<'PY'
+import argparse
+from pathlib import Path
+import subprocess
+import sys
 
-usage() {
-  cat <<'USAGE'
-Usage:
-  scripts/adopt [--tool codex|claude|gemini|generic|cursor|all] [--apply] [--backup]
 
-Default is dry-run. Nothing is written outside this repo unless --apply is set.
-USAGE
-}
+parser = argparse.ArgumentParser(
+    description="Preview project-local Claude Code adoption; never edit global config."
+)
+parser.add_argument("--project", required=True, help="Existing Rails Git repository root")
+parser.add_argument("--tool", default="claude", help="Only claude is supported by this installer")
+parser.add_argument("--apply", action="store_true", help="Apply the previewed changes")
+args = parser.parse_args(sys.argv[2:])
+root = Path(sys.argv[1]).resolve()
 
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --tool)
-      TOOL="${2:-}"
-      shift 2
-      ;;
-    --apply)
-      APPLY=1
-      shift
-      ;;
-    --backup)
-      BACKUP=1
-      shift
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    *)
-      printf 'unknown argument: %s\n' "$1" >&2
-      usage >&2
-      exit 64
-      ;;
-  esac
-done
 
-timestamp() {
-  date '+%Y%m%d%H%M%S'
-}
+def fail(message):
+    parser.exit(1, f"adopt: {message}\n")
 
-say_cmd() {
-  if [ "$APPLY" -eq 1 ]; then
-    printf 'APPLY: %s\n' "$*"
-  else
-    printf 'DRY-RUN: %s\n' "$*"
-  fi
-}
 
-link_one() {
-  source="$1"
-  target="$2"
-  target_dir="$(dirname "$target")"
+if args.tool != "claude":
+    fail("only --tool claude is supported; other adapters require a reviewed project-local setup")
 
-  if [ ! -e "$source" ] && [ ! -L "$source" ]; then
-    printf 'missing source: %s\n' "$source" >&2
-    exit 1
-  fi
+project = Path(args.project).expanduser().resolve()
+if not project.is_dir():
+    fail(f"project directory does not exist: {project}")
+if project == root:
+    fail("choose the target Rails repository, not Railsmith itself")
 
-  say_cmd "mkdir -p '$target_dir'"
-  say_cmd "ln -s '$source' '$target'"
 
-  if [ "$APPLY" -ne 1 ]; then
-    return
-  fi
+def git(*arguments):
+    return subprocess.run(["git", *arguments], cwd=project, capture_output=True)
 
-  mkdir -p "$target_dir"
 
-  if [ -e "$target" ] || [ -L "$target" ]; then
-    if [ "$BACKUP" -ne 1 ]; then
-      printf 'refusing to replace existing target without --backup: %s\n' "$target" >&2
-      exit 1
-    fi
-    backup="${target}.bak.$(timestamp)"
-    mv "$target" "$backup"
-    printf 'backed up %s -> %s\n' "$target" "$backup"
-  fi
+repository = git("rev-parse", "--show-toplevel")
+if repository.returncode or Path(repository.stdout.decode().strip()).resolve() != project:
+    fail("--project must be the root of an existing Git working tree")
 
-  ln -s "$source" "$target"
-}
+# These paths become instruction text. Refuse ambiguous import syntax.
+for path in (root, project):
+    if any(char in str(path) for char in ('\n', '\r', '\t', '\\', '"', '`')):
+        fail("repository paths must not contain control characters, backslashes, quotes, or backticks")
 
-link_skills() {
-  target_root="$1"
-  for skill_dir in "$ROOT"/skills/*; do
-    [ -d "$skill_dir" ] || continue
-    link_one "$skill_dir" "$target_root/$(basename "$skill_dir")"
-  done
-}
+sources = [root / "core/AGENTS.md", root / "adapters/claude/CLAUDE.md"]
+for source in sources:
+    if not source.is_file():
+        fail(f"missing source: {source}")
 
-adopt_codex() {
-  printf '\n# Codex\n'
-  link_one "$ROOT/adapters/codex/AGENTS.md" "$HOME/.codex/AGENTS.md"
-  link_skills "$HOME/.codex/skills"
-}
+skills = sorted((root / "skills").glob("*/SKILL.md"))
+if not skills:
+    fail("no skills/*/SKILL.md sources found")
 
-adopt_claude() {
-  printf '\n# Claude\n'
-  link_one "$ROOT/adapters/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
-  link_skills "$HOME/.claude/skills"
-}
+begin = "<!-- railsmith:begin -->"
+end = "<!-- railsmith:end -->"
+instructions = project / "CLAUDE.local.md"
 
-adopt_gemini() {
-  printf '\n# Gemini\n'
-  link_one "$ROOT/adapters/gemini/GEMINI.md" "$HOME/.gemini/GEMINI.md"
-  link_skills "$HOME/.gemini/skills"
-}
 
-adopt_generic() {
-  printf '\n# Generic AGENTS\n'
-  link_one "$ROOT/adapters/generic/AGENTS.md" "$HOME/.agents/AGENTS.md"
-  link_skills "$HOME/.agents/skills"
-}
+def check_destination(path):
+    # Do not follow a project-local config symlink into another repository/home.
+    for item in (path, *path.parents):
+        if item == project:
+            break
+        if item.is_symlink():
+            fail(f"refusing configuration symlink: {item}")
+        if item != path and item.exists() and not item.is_dir():
+            fail(f"parent is not a directory: {item}")
 
-adopt_cursor() {
-  printf '\n# Cursor\n'
-  printf 'Cursor app preferences are not edited by this script.\n'
-  printf 'Project rule template: %s\n' "$ROOT/adapters/cursor/rules/railsmith.mdc"
-  printf 'User-rules snippet: %s\n' "$ROOT/adapters/cursor/user-rules.md"
-}
 
-case "$TOOL" in
-  codex) adopt_codex ;;
-  claude) adopt_claude ;;
-  gemini) adopt_gemini ;;
-  generic) adopt_generic ;;
-  cursor) adopt_cursor ;;
-  all)
-    adopt_codex
-    adopt_claude
-    adopt_gemini
-    adopt_generic
-    adopt_cursor
-    ;;
-  *)
-    printf 'unknown tool: %s\n' "$TOOL" >&2
-    usage >&2
-    exit 64
-    ;;
-esac
+check_destination(instructions)
+if instructions.exists() and not instructions.is_file():
+    fail(f"instruction target is not a file: {instructions}")
+original = instructions.read_bytes() if instructions.exists() else b""
+try:
+    existing = original.decode("utf-8")
+except UnicodeDecodeError:
+    fail("existing CLAUDE.local.md is not UTF-8; review it manually")
 
-if [ "$APPLY" -eq 1 ]; then
-  printf '\nadoption applied\n'
-else
-  printf '\ndry-run only; re-run with --apply --backup to write links\n'
-fi
+lines = [begin, "## Railsmith", "", "Keep repository-specific instructions authoritative."]
+local_agents = project / "AGENTS.md"
+if local_agents.exists():
+    if not local_agents.is_file():
+        fail("existing AGENTS.md is not a readable file")
+    lines.append("@AGENTS.md")
+imports = ["@" + str(source).replace(" ", "\\ ") for source in sources]
+lines.extend([
+    *imports,
+    "",
+    f"Railsmith source root: `{root}`.",
+    "Resolve linked skill directories to this source root before following their relative references.",
+    "Installation is local to this checkout; do not commit machine-specific paths or links.",
+    end,
+])
+block = "\n".join(lines) + "\n"
+if begin in existing or end in existing:
+    if existing.count(begin) != 1 or existing.count(end) != 1:
+        fail("ambiguous Railsmith markers in CLAUDE.local.md; review them manually")
+    start = existing.index(begin)
+    finish = existing.index(end) + len(end)
+    if start > finish:
+        fail("reversed Railsmith markers in CLAUDE.local.md; review them manually")
+    if existing[finish:finish + 1] == "\n":
+        finish += 1
+    updated = existing[:start] + block + existing[finish:]
+else:
+    separator = "" if not existing else ("\n" if existing.endswith("\n") else "\n\n")
+    updated = existing + separator + block
+
+links = []
+protected = ["CLAUDE.local.md"]
+for skill in skills:
+    source = skill.parent.resolve()
+    name = skill.parent.name
+    if not name or any(char not in "abcdefghijklmnopqrstuvwxyz0123456789-" for char in name):
+        fail(f"unsupported skill directory name: {name}")
+    relative = f".claude/skills/{name}"
+    protected.append(relative)
+    target = project / relative
+    # Existing correct links are already installed. Everything else is a collision.
+    if target.is_symlink() and target.resolve() == source:
+        check_destination(target.parent)
+        continue
+    check_destination(target)
+    if target.exists():
+        fail(f"existing skill target would be replaced: {target}")
+    links.append((source, target))
+
+tracked = git("ls-files", "-z", "--", *protected)
+if tracked.returncode:
+    fail("could not verify tracked installation targets")
+if tracked.stdout:
+    names = tracked.stdout.decode().replace("\x00", ", ").rstrip(", ")
+    fail(f"refusing tracked installation targets: {names}")
+
+ignore = project / ".gitignore"
+check_destination(ignore)
+if ignore.exists() and not ignore.is_file():
+    fail("existing .gitignore is not a file")
+ignore_existed = ignore.exists()
+ignore_original = ignore.read_bytes() if ignore_existed else b""
+try:
+    ignore_text = ignore_original.decode("utf-8")
+except UnicodeDecodeError:
+    fail("existing .gitignore is not UTF-8; review it manually")
+ignore_additions = []
+for relative in protected:
+    pattern = f"/{relative}"
+    if pattern not in ignore_text.splitlines() or git("check-ignore", "-q", "--", relative).returncode:
+        ignore_additions.append(pattern)
+ignore_updated = ignore_original
+if ignore_additions:
+    separator = b"" if not ignore_original or ignore_original.endswith(b"\n") else b"\n"
+    ignore_updated += separator + ("\n# Railsmith local installation\n" +
+                                   "\n".join(ignore_additions) + "\n").encode()
+
+# All collisions are checked before creating files or directories.
+changes = updated.encode("utf-8") != original
+prefix = "APPLY" if args.apply else "DRY-RUN"
+if ignore_additions:
+    print(f"{prefix}: append exact local-installation exclusions to {ignore}")
+    print("\n".join(ignore_additions))
+if changes:
+    print(f"{prefix}: add/update marked bridge in {instructions}")
+    print(block, end="")
+for source, target in links:
+    print(f"{prefix}: link {target} -> {source}")
+if args.apply:
+    if ignore_updated != ignore_original:
+        ignore.write_bytes(ignore_updated)
+    # Verify effective rules before creating anything containing local paths.
+    # Nested .gitignore negations may override the root's exact exclusions.
+    exposed = [relative for relative in protected
+               if git("check-ignore", "-q", "--", relative).returncode]
+    if exposed:
+        if ignore_updated != ignore_original:
+            if ignore_existed:
+                ignore.write_bytes(ignore_original)
+            else:
+                ignore.unlink()
+        fail("Git ignore rules do not exclude " + ", ".join(exposed) +
+             "; restored .gitignore and made no installation changes")
+    if changes:
+        instructions.write_bytes(updated.encode("utf-8"))
+    for source, target in links:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.symlink_to(source, target_is_directory=True)
+if not changes and not links and not ignore_additions:
+    print("Already adopted; no changes.")
+elif not args.apply:
+    print("No files changed. Review the preview, then repeat with --apply.")
+PY

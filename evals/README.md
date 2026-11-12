@@ -32,5 +32,34 @@ ruby examples/narrow-interface/retry_schedule_test.rb
 ```
 
 Those establish deterministic helper/example behaviour, not that a coding model
-will select the right skill or improve Rails development outcomes. The backlog
-includes a deterministic review validator and matched agent evaluations.
+will select the right skill or improve Rails development outcomes.
+
+## Validate an assessment
+
+Run the synthetic migration example from the repository root:
+
+```sh
+python3 scripts/validate_review.py evals/review-assessment.json \
+  --current-snapshot evals/review-snapshot.json
+```
+
+It returns GREEN, HIGH deployment risk and a human-review requirement. Use the
+[example assessment](review-assessment.json) as the input format. Keep the full
+review report alongside it. Include each finding's location, trigger and
+consequence in its evidence. Classify a blocker by the area whose score it lowers
+to 2 or below. For each verification entry, record the exact check and outcome.
+Use `observed` when a check yields usable evidence, including a reproduced test
+failure. Use `unavailable` or `error` when a check yields no usable result.
+
+Supply the current snapshot from a trusted source independent of the assessment.
+Use comparable IDs for the base, head and working-tree state. For example, use
+commit IDs plus a digest covering relevant staged, unstaged and untracked inputs.
+The tool compares the supplied IDs. Capturing them and verifying the underlying
+evidence remain the caller's responsibility.
+
+A complete decision exits 0 for every verdict. Invalid or stale input exits 1.
+An assessment with only `status` (INCOMPLETE or ERROR) and a nonempty `reason`
+exits 2 with just the status and can omit the snapshot. A false
+`human_review_required` leaves any stricter repository policy in effect.
+Every result leaves approval, merge and deployment decisions to their existing
+processes.

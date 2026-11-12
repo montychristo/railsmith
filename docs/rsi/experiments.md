@@ -40,3 +40,20 @@ local bridge. Use the commit and CI run as the exact published snapshot.
 as a testable foundation. Live Claude adoption and measured agent effectiveness
 remain unverified. **Reassess:** first weekly review, then
 whenever a real adoption, review or publication failure contradicts the guidance.
+
+## RSI-002 — 2026-11-12 — validate structured review decisions
+
+The baseline at `69b4c16` specified verdict and risk in prose. A local JSON
+validator now derives verdict and human-review requirements and rejects
+assessments with missing required verification, contradictory blockers,
+mismatched snapshot IDs or action fields.
+
+The synthetic migration assessment returned GREEN with HIGH deployment risk
+and required human review. Changing only the current working-tree ID rejected
+the same assessment. Fifteen CLI tests cover these cases, incomplete assessments
+and malformed input. The validator checks the evidence structure and compares
+caller-supplied IDs. It cannot establish that the evidence is accurate or that
+the IDs were freshly captured.
+
+Retain as an optional review check. Reassess when a real caller integrates it
+or a review exposes a contradiction the validator misses.

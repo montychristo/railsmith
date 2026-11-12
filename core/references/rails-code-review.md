@@ -48,3 +48,5 @@ Rollback: recovery approach where deployment behaviour changes
 Keep the initial summary compact. Include all actionable findings or disclose where the full set is recorded. Bind the report to the reviewed snapshot; if that snapshot changes before publication, recheck affected conclusions.
 
 Try the [development cases](../../evals/README.md) when changing this contract.
+For a structured assessment, the [local validator](../../evals/README.md#validate-an-assessment)
+derives the quality verdict and checks the reported risk and snapshot for consistency.

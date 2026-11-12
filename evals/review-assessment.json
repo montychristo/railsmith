@@ -1,0 +1,33 @@
+{
+  "status": "COMPLETE",
+  "snapshot": {
+    "base": "synthetic-base",
+    "head": "synthetic-head",
+    "working_tree": "clean"
+  },
+  "scores": {
+    "functional": {"value": 4, "reason": "The conversion preserves the total and rejects invalid rows."},
+    "code": {"value": 4, "reason": "The transaction rolls back all writes on an invalid row."},
+    "docs": {"value": 4, "reason": "The migration runbook specifies how to restore the original values."}
+  },
+  "findings": [],
+  "verification": [
+    {
+      "check": "Migration regression tests",
+      "required": true,
+      "result": "observed",
+      "evidence": "Synthetic result: the valid-row, invalid-row and rollback cases passed."
+    },
+    {
+      "check": "Production-sized rehearsal",
+      "required": false,
+      "result": "unavailable",
+      "evidence": "Runtime and lock duration remain unknown."
+    }
+  ],
+  "deployment_risk": {
+    "level": "HIGH",
+    "reason": "The conversion discards the old representation; recovery requires a backup restore."
+  },
+  "material_architecture": false
+}

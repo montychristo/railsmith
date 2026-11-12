@@ -1,0 +1,5 @@
+{
+  "base": "synthetic-base",
+  "head": "synthetic-head",
+  "working_tree": "clean"
+}

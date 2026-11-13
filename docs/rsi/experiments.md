@@ -57,3 +57,18 @@ the IDs were freshly captured.
 
 Retain as an optional review check. Reassess when a real caller integrates it
 or a review exposes a contradiction the validator misses.
+
+## RSI-003 — 2026-11-13 — demonstrate database uniqueness under contention
+
+The [database example](../../examples/database-contention/README.md) tests
+one reading-list entry per book. A forced interleaving of two check-then-insert
+callers without an index produced two rows. With a composite unique index and
+a targeted conflict handler, PostgreSQL reported the second writer blocked
+before commit. The writers then reported one addition and one duplicate, with
+one committed row. Distinct pairs succeeded, a direct duplicate failed, and
+the database rejected a null key.
+
+Retain the fixture in CI. All three cases passed on PostgreSQL 16 with Active
+Record 8.1, including ten seeded reruns. This covers one committed race at
+read-committed isolation. Reassess when the supported database version changes
+or the test fails to observe contention.

@@ -10,6 +10,19 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: railsmith_example
+          POSTGRES_PASSWORD: railsmith-example
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U postgres -d railsmith_example"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - name: Validate repository and publication patterns
@@ -25,3 +38,11 @@ jobs:
         run: gem install minitest --no-document
       - name: Test narrow-interface example
         run: ruby examples/narrow-interface/retry_schedule_test.rb
+      - name: Install database example dependencies
+        run: |
+          gem install activerecord -v '~> 8.1.0' --no-document
+          gem install pg -v '~> 1.6' --no-document
+      - name: Test database contention example
+        env:
+          RAILSMITH_EXAMPLE_DATABASE_URL: postgresql://postgres:railsmith-example@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/railsmith_example
+        run: ruby examples/database-contention/test/reading_list_entry_test.rb

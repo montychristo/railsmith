@@ -72,3 +72,17 @@ Retain the fixture in CI. All three cases passed on PostgreSQL 16 with Active
 Record 8.1, including ten seeded reruns. This covers one committed race at
 read-committed isolation. Reassess when the supported database version changes
 or the test fails to observe contention.
+
+## RSI-004 — 2026-11-14 — hold an uncertain submission on job redelivery
+
+The [print job example](../../examples/job-redelivery/README.md) exercises
+serialized Active Job deliveries with PostgreSQL and a fake printer. The
+mark-success-after-reply baseline printed twice when the first reply was lost.
+A committed conditional update limited the candidate to one submission per
+request after a lost reply or a failed receipt write. A second connection saw
+the claim during submission. A new request for the same document succeeded,
+and execution inside a transaction was rejected before printing.
+
+Retain the six cases in CI. Unconfirmed requests require reconciliation and
+may represent zero or one print. Reassess if an example adds a provider with
+documented idempotency or a reliable lookup API.

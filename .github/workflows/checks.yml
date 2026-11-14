@@ -46,3 +46,9 @@ jobs:
         env:
           RAILSMITH_EXAMPLE_DATABASE_URL: postgresql://postgres:railsmith-example@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/railsmith_example
         run: ruby examples/database-contention/test/reading_list_entry_test.rb
+      - name: Install Active Job example dependency
+        run: gem install activejob -v '~> 8.1.0' --no-document
+      - name: Test job redelivery example
+        env:
+          RAILSMITH_EXAMPLE_DATABASE_URL: postgresql://postgres:railsmith-example@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/railsmith_example
+        run: ruby examples/job-redelivery/test/print_document_job_test.rb

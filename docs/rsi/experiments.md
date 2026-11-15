@@ -86,3 +86,19 @@ and execution inside a transaction was rejected before printing.
 Retain the six cases in CI. Unconfirmed requests require reconciliation and
 may represent zero or one print. Reassess if an example adds a provider with
 documented idempotency or a reliable lookup API.
+
+## RSI-005 — 2026-11-15 — check production build artifacts
+
+The PR workflow gave no production build procedure at `6529609`. In a
+disposable Rails 8.1.4.1 and Propshaft 1.3.2 app, the version command and
+production precompile both succeeded with a missing stylesheet. Bundler 2.6.2
+also rewrote a stale lockfile during an ordinary local install.
+
+The [build reference](../../core/references/rails-runtime-checks.md) reproduced
+the fingerprinted stylesheet on Ruby 3.4.2. Its manifest check rejected the
+missing asset despite successful precompilation. Frozen install rejected an
+out-of-sync Gemfile before precompilation and left the lockfile unchanged.
+A local setting that disabled frozen mode was rejected before install.
+
+Retain as an on-demand check for build changes. The exercise used one pipeline
+and a disposable app. Reassess when another pipeline needs a worked example.

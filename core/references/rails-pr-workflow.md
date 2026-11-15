@@ -63,6 +63,9 @@ User, maintainer, data, or deployment impact.
 
 - Rebase or update from the target branch if the repo expects it.
 - Run relevant tests.
+- For dependency, runtime, or asset changes, reproduce the
+  [production build](rails-runtime-checks.md) with the application's locked
+  dependencies and verify the expected outputs.
 - Run style/security checks where relevant.
 - Self-review the diff.
 - Check for private data in the PR body, screenshots, logs, and commits.

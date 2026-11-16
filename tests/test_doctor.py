@@ -9,6 +9,7 @@ import unittest
 
 
 CHECKER = Path(__file__).resolve().parents[1] / "scripts/check_repository.py"
+SHELL_ENTRYPOINTS = ("scripts/adopt", "scripts/new-project", "scripts/doctor")
 REQUIRED = (
     "README.md", "AGENTS.md", "core/AGENTS.md", "docs/voice.md",
     "profiles/chris/voice.md", "adapters/codex/AGENTS.md",
@@ -28,6 +29,8 @@ class DoctorTests(unittest.TestCase):
         self.git("init", "-q")
         for path in REQUIRED:
             self.write(path, "# Public guide\n")
+        for path in SHELL_ENTRYPOINTS:
+            self.write(path, "#!/usr/bin/env bash\ntrue\n")
         self.write("skills/example/SKILL.md", "---\nname: example\ndescription: Example skill\n---\n")
         self.git("add", ".")
 
@@ -151,6 +154,29 @@ class DoctorTests(unittest.TestCase):
         self.write("scripts/example", "#!/usr/bin/env bash\ntrue\n")
         self.assertEqual(self.check().returncode, 0)
         self.assert_failed(self.check(staged=True), "Shell syntax error")
+
+    def test_required_entrypoints_are_parsed_without_a_shebang(self):
+        for path in SHELL_ENTRYPOINTS:
+            with self.subTest(path=path):
+                self.write(path, "if then\n")
+                self.assert_failed(self.check(), f"Shell syntax error: {path}")
+                self.git("add", path)
+                self.write(path, "#!/usr/bin/env bash\ntrue\n")
+                self.assertEqual(self.check().returncode, 0)
+                self.assert_failed(self.check(staged=True), f"Shell syntax error: {path}")
+                self.git("add", path)
+
+    def test_required_entrypoints_must_exist_in_the_snapshot(self):
+        for path in SHELL_ENTRYPOINTS:
+            with self.subTest(path=path):
+                (self.root / path).unlink()
+                self.assert_failed(self.check(), f"Missing required file: {path}")
+                self.assertEqual(self.check(staged=True).returncode, 0)
+                self.git("add", "-u", path)
+                self.write(path, "#!/usr/bin/env bash\ntrue\n")
+                self.assertEqual(self.check().returncode, 0)
+                self.assert_failed(self.check(staged=True), f"Missing required file: {path}")
+                self.git("add", path)
 
     def test_git_error_fails_closed(self):
         outside = self.root / "not-a-repository"

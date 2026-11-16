@@ -102,3 +102,25 @@ A local setting that disabled frozen mode was rejected before install.
 
 Retain as an on-demand check for build changes. The exercise used one pipeline
 and a disposable app. Reassess when another pipeline needs a worked example.
+
+## RSI-006 — 2026-11-16 — verify each shell entrypoint
+
+The weekly review of RSI-001 through RSI-005 found a recurring evidence gap:
+an individual check can pass while the behaviour it appears to cover fails.
+The contention, redelivery and build examples each exposed such a gap.
+Their synthetic results and the review validator's results establish tool and
+fixture behaviour. Agent false alarms, missed findings and host adoption
+still need matched evaluations or host-specific checks.
+
+At `01f4012`, the shell command shared by CI and two guides accepted faults
+in its second and third arguments. On Bash 3.2, only a fault in the first
+script returned a nonzero status. Doctor already parsed scripts with
+recognized shell shebangs, so the standalone step was redundant. In disposable
+Git fixtures, the old doctor accepted missing entrypoints or malformed
+entrypoints without shebangs. The candidate rejects both for each of the three
+paths, in the working tree and in the index. A repaired working copy still
+leaves a staged failure visible.
+
+Keep one gate in doctor and one contributor checklist. Linking to that
+checklist removed 369 bytes from the root agent instructions. Reassess when
+an entrypoint changes or the workflow misses a syntax fault.

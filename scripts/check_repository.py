@@ -10,10 +10,12 @@ import subprocess
 import sys
 
 
+SHELL_ENTRYPOINTS = ("scripts/adopt", "scripts/new-project", "scripts/doctor")
 REQUIRED_FILES = (
     "README.md", "AGENTS.md", "core/AGENTS.md", "docs/voice.md",
     "profiles/chris/voice.md", "adapters/codex/AGENTS.md",
     "adapters/claude/CLAUDE.md", "adapters/cursor/rules/railsmith.mdc",
+    *SHELL_ENTRYPOINTS,
 )
 MAX_FILE_BYTES = 2 * 1024 * 1024
 DEFAULT_PATTERNS = (
@@ -137,7 +139,9 @@ def validate(files):
     for path, text in files.items():
         if not path.startswith("scripts/"):
             continue
-        if text.startswith(("#!/usr/bin/env bash", "#!/bin/bash", "#!/bin/sh")):
+        if path in SHELL_ENTRYPOINTS or text.startswith(
+            ("#!/usr/bin/env bash", "#!/bin/bash", "#!/bin/sh")
+        ):
             result = subprocess.run(["bash", "-n"], input=text, text=True, capture_output=True)
             if result.returncode:
                 raise CheckError(f"Shell syntax error: {path}")

@@ -11,11 +11,15 @@ From the repository root, with Bash, Git, Python 3 and Ruby with Minitest:
 
 ```sh
 scripts/doctor
-bash -n scripts/adopt scripts/new-project scripts/doctor
 python3 -m unittest discover -s tests -p 'test_*.py'
 ruby examples/narrow-interface/retry_schedule_test.rb
 git diff --check
+git status --short
 ```
+
+Doctor checks the presence and shell syntax of all three entrypoints. For changes
+to the database or job examples, run their PostgreSQL tests as described in the
+[example guides](examples/README.md) and the [Checks workflow](.github/workflows/checks.yml).
 
 After staging only the intended files, run `scripts/doctor --staged` and inspect
 `git diff --cached --check` plus the complete staged diff. Scan failures block

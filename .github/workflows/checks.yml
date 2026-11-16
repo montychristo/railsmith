@@ -25,10 +25,8 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
-      - name: Validate repository and publication patterns
+      - name: Validate repository, entrypoint syntax and publication patterns
         run: scripts/doctor
-      - name: Check shell entrypoints
-        run: bash -n scripts/adopt scripts/new-project scripts/doctor
       - name: Test repository checks
         run: python3 -m unittest discover -s tests -v
       - uses: ruby/setup-ruby@v1

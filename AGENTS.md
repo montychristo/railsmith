@@ -56,16 +56,5 @@ The `scripts/` directory exists for repeatability, but agents should treat it as
 
 ## Development
 
-Use `apply_patch` for edits where possible. Before claiming the repo is ready, run:
-
-```sh
-scripts/doctor
-bash -n scripts/adopt scripts/new-project scripts/doctor
-python3 -m unittest discover -s tests -p 'test_*.py'
-ruby examples/narrow-interface/retry_schedule_test.rb
-git status --short
-```
-
-Before a commit, stage only reviewed files, then run `scripts/doctor --staged`
-and inspect `git diff --cached`. The scan is a heuristic, not proof that material
-is safe to publish. Independently review the diff for source and domain leakage.
+Use `apply_patch` for edits where possible. Follow the [contribution checks](CONTRIBUTING.md#check-a-contribution)
+for local validation and review of the staged diff.

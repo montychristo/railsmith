@@ -34,6 +34,13 @@ ruby examples/narrow-interface/retry_schedule_test.rb
 Those establish deterministic helper/example behaviour, not that a coding model
 will select the right skill or improve Rails development outcomes.
 
+## Review a patch
+
+Use the [workspace notice cases](review-scoping/README.md) to test whether a
+review identifies a tenant-scoping regression and stays quiet on a similar
+patch that preserves the tenant boundary. The assessor can verify both
+outcomes with a runnable Active Record query.
+
 ## Validate an assessment
 
 Run the synthetic migration example from the repository root:

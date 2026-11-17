@@ -1,0 +1,11 @@
+diff --git a/app/models/notice.rb b/app/models/notice.rb
+--- a/app/models/notice.rb
++++ b/app/models/notice.rb
+@@ -1,5 +1,6 @@
+ class Notice < ActiveRecord::Base
+   def self.visible_to(workspace_id)
+-    where(workspace_id: workspace_id, state: "published")
++    workspace_notices = where(workspace_id: workspace_id)
++    workspace_notices.where(state: "published").or(where(state: "preview"))
+   end
+ end

@@ -124,3 +124,22 @@ leaves a staged failure visible.
 Keep one gate in doctor and one contributor checklist. Linking to that
 checklist removed 369 bytes from the root agent instructions. Reassess when
 an entrypoint changes or the workflow misses a syntax fault.
+
+## RSI-007 — 2026-11-17 — exercise review findings on real queries
+
+At `cfeecb5`, the review controls described expected decisions without a patch
+or an executable example of the reported behavior. The
+[workspace notice cases](../../evals/review-scoping/README.md) give reviewers the
+same request and caller context with one patch at a time. The assessor can
+record a missed finding and an unsupported scoping finding separately.
+
+On Active Record 8.1.4.1 and SQLite 3.53.2, the unchanged query returned only
+the caller's published notice for either workspace. Patch A also returned the other workspace's
+preview, while patch B returned only the local published and preview notices.
+Substituting A for B in a scratch copy made the oracle fail on the clean
+control. A clean patch pinned to one workspace also failed when called from
+the other workspace. This run exercised query behavior. Live reviewer detection and
+false-alarm rates remain unmeasured.
+
+Keep the cases for development. Reassess with matched attempts and unseen
+cases before drawing conclusions about guidance effectiveness.

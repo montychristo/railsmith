@@ -16,6 +16,10 @@ The [16 November review](experiments.md#rsi-006--2026-11-16--verify-each-shell-e
 prioritized review effectiveness because the existing checks establish fixture and
 tool behaviour while matched agent results are still missing.
 
+The [workspace notice cases](../../evals/review-scoping/README.md) provide
+a verified seeded defect and clean control for development. Matched review
+attempts and unseen cases remain open.
+
 Choose the next item from observed failures or missing value.
 Any item may be split, retired or replaced. Automation may improve its checks;
 it may not grant itself broader access or relax publication safeguards.

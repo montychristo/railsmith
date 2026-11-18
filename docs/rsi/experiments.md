@@ -143,3 +143,17 @@ false-alarm rates remain unmeasured.
 
 Keep the cases for development. Reassess with matched attempts and unseen
 cases before drawing conclusions about guidance effectiveness.
+
+## RSI-008 — 2026-11-18 — test a Turbo Drive form in the browser
+
+At `1533f30`, Railsmith had no browser example for Turbo form validation.
+The [note form](../../examples/turbo-form/README.md) now tests response status,
+draft retention, navigation and the saved row on Rails 8.1.4.1, Turbo Rails
+2.0.23 and headless Chrome 157. The request and system tests passed.
+
+In disposable copies, a 200 failure response prevented the validation error
+from rendering. Removing Turbo left the request test green but failed the
+browser assertion that the original document survived submission.
+
+Keep the example in CI. It covers one Chrome journey with SQLite. Reassess
+when a frame or stream needs a different test design.

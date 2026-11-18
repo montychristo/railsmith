@@ -1,0 +1,13 @@
+<h1>New note</h1>
+<% if @note.errors.any? %>
+  <ul aria-label="Validation errors">
+    <% @note.errors.full_messages.each do |message| %>
+      <li><%= message %></li>
+    <% end %>
+  </ul>
+<% end %>
+<%= form_with model: @note do |form| %>
+  <p><%= form.label :title %> <%= form.text_field :title %></p>
+  <p><%= form.label :body %> <%= form.text_area :body %></p>
+  <%= form.submit "Save note" %>
+<% end %>

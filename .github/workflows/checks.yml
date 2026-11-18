@@ -50,3 +50,11 @@ jobs:
         env:
           RAILSMITH_EXAMPLE_DATABASE_URL: postgresql://postgres:railsmith-example@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/railsmith_example
         run: ruby examples/job-redelivery/test/print_document_job_test.rb
+      - name: Test Turbo form example
+        working-directory: examples/turbo-form
+        env:
+          SE_AVOID_STATS: 'true'
+        run: |
+          bundle install --jobs 4
+          RAILS_ENV='test' bin/rails db:prepare
+          bin/rails test:all

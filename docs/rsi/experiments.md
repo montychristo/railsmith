@@ -169,5 +169,6 @@ Chrome for Testing and ChromeDriver 157.0.8103.78. The two Rails tests passed
 with 13 assertions and clean teardown. Removing Turbo still failed the browser
 document-identity assertion while the request check passed.
 
-Keep the version pin local to this example. Reassess when a newer matching
-pair completes the same assertions and teardown.
+The initial cross-platform pin failed to start downloaded Chrome on Ubuntu CI.
+Limit the pin to macOS and let Ubuntu CI use its installed pair. Reassess when
+a newer matching pair completes the same assertions and teardown.

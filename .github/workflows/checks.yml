@@ -55,6 +55,8 @@ jobs:
         env:
           SE_AVOID_STATS: 'true'
         run: |
+          google-chrome --version
+          chromedriver --version
           bundle install --jobs 4
           RAILS_ENV='test' bin/rails db:prepare
           bin/rails test:all

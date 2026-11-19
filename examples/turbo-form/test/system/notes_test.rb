@@ -1,12 +1,14 @@
 require "test_helper"
 
 class NotesTest < ActionDispatch::SystemTestCase
-  # Rails resolves Selenium's binaries inside driven_by, before browser options
-  # are configured. Chrome 158 rejects Capybara 3.40's wildcard origin on reset.
-  ENV["SE_CHROME_VERSION"] = "157.0.8103.78"
-  ENV["SE_CHROMEDRIVER_VERSION"] = ENV.fetch("SE_CHROME_VERSION")
-  ENV["SE_FORCE_BROWSER_DOWNLOAD"] = "true"
-  ENV["SE_SKIP_DRIVER_IN_PATH"] = "true"
+  if Gem::Platform.local.os == "darwin"
+    # Rails resolves the binaries inside driven_by. Pin the pair before that
+    # lookup because Chrome 158 rejects Capybara 3.40's wildcard origin on reset.
+    ENV["SE_CHROME_VERSION"] = "157.0.8103.78"
+    ENV["SE_CHROMEDRIVER_VERSION"] = ENV.fetch("SE_CHROME_VERSION")
+    ENV["SE_FORCE_BROWSER_DOWNLOAD"] = "true"
+    ENV["SE_SKIP_DRIVER_IN_PATH"] = "true"
+  end
 
   driven_by :selenium, using: :headless_chrome
 

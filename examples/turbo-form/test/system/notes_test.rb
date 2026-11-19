@@ -1,6 +1,13 @@
 require "test_helper"
 
 class NotesTest < ActionDispatch::SystemTestCase
+  # Rails resolves Selenium's binaries inside driven_by, before browser options
+  # are configured. Chrome 158 rejects Capybara 3.40's wildcard origin on reset.
+  ENV["SE_CHROME_VERSION"] = "157.0.8103.78"
+  ENV["SE_CHROMEDRIVER_VERSION"] = ENV.fetch("SE_CHROME_VERSION")
+  ENV["SE_FORCE_BROWSER_DOWNLOAD"] = "true"
+  ENV["SE_SKIP_DRIVER_IN_PATH"] = "true"
+
   driven_by :selenium, using: :headless_chrome
 
   test "correcting an invalid note preserves the draft and saves it through Turbo" do

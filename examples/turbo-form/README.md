@@ -4,9 +4,11 @@ The [notes controller](app/controllers/notes_controller.rb) renders the invalid
 note with HTTP 422. When the note saves, it redirects with HTTP 303 to its show
 page. Both responses follow the [Turbo Drive form contract](https://turbo.hotwired.dev/handbook/drive#redirecting-after-a-form-submission).
 
-Use Ruby 3.4, Bundler and Chrome with a matching ChromeDriver available to
-Selenium. The example uses a local SQLite test database and a temporary Chrome
-profile. From the example directory, run:
+Use Ruby 3.4 and Bundler. The system test uses
+[Selenium Manager](https://www.selenium.dev/documentation/selenium_manager/#automated-browser-management)
+to cache a matched Chrome for Testing and ChromeDriver pair. The first run
+needs access to Google's browser downloads. The example uses a local SQLite
+test database and a temporary Chrome profile. From the example directory, run:
 
 ```sh
 bundle install
@@ -27,6 +29,10 @@ To check what the browser catches, change the failure render to status 200 in a
 disposable copy and run `bin/rails test:system`. The validation message should
 never appear. Removing the Turbo script instead leaves the request test green,
 but the browser loses its window marker after the first submission.
+
+Chrome 158 rejects the wildcard origin Capybara 3.40.0 passes during browser
+reset. The system test pins the working Chrome 157 pair. Update the pin when
+the full system test, including teardown, passes on a newer matched pair.
 
 This exercises one Turbo Drive form in headless Chrome. It does not cover
 Turbo Frames or Streams, other browsers, visual layout, or an accessibility audit.

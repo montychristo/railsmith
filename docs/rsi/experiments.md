@@ -157,3 +157,17 @@ browser assertion that the original document survived submission.
 
 Keep the example in CI. It covers one Chrome journey with SQLite. Reassess
 when a frame or stream needs a different test design.
+
+## RSI-009 — 2026-11-19 — stabilize the Turbo test browser pair
+
+At `662214b`, matching headless Chrome and ChromeDriver 158.0.8127.36
+completed the form assertions on macOS, then failed in Capybara 3.40.0's
+session reset because Chrome rejected the wildcard storage origin.
+
+With an empty cache and a 158 driver on PATH, Selenium Manager selected
+Chrome for Testing and ChromeDriver 157.0.8103.78. The two Rails tests passed
+with 13 assertions and clean teardown. Removing Turbo still failed the browser
+document-identity assertion while the request check passed.
+
+Keep the version pin local to this example. Reassess when a newer matching
+pair completes the same assertions and teardown.

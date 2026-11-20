@@ -40,6 +40,9 @@ jobs:
         run: |
           gem install activerecord -v '~> 8.1.0' --no-document
           gem install pg -v '~> 1.6' --no-document
+          gem install sqlite3 -v '~> 2.0' --no-document
+      - name: Verify review scoping fixtures
+        run: ruby evals/review-scoping/verify.rb
       - name: Test database contention example
         env:
           RAILSMITH_EXAMPLE_DATABASE_URL: postgresql://postgres:railsmith-example@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/railsmith_example

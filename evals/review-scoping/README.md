@@ -22,8 +22,9 @@ one clean control, report counts and the individual results.
 
 ## Verify the case evidence
 
-With Ruby 3.4, Active Record 8.1, sqlite3 2.x and Git installed, run from the
-repository root:
+The Checks workflow runs this verification for pushes and pull requests.
+With Ruby 3.4, Active Record 8.1, sqlite3 2.x and Git installed, run it locally
+from the repository root:
 
 ```sh
 ruby evals/review-scoping/verify.rb

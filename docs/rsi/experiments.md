@@ -172,3 +172,14 @@ document-identity assertion while the request check passed.
 The initial cross-platform pin failed to start downloaded Chrome on Ubuntu CI.
 Limit the pin to macOS and let Ubuntu CI use its installed pair. Reassess when
 a newer matching pair completes the same assertions and teardown.
+
+## RSI-010 — 2026-11-20 — verify review fixtures in CI
+
+At `6a53baa`, Checks did not run the workspace notice verifier. Replacing
+the clean patch with the seeded patch in a disposable copy passed doctor
+and the Python and narrow-interface suites. The verifier rejected the extra
+foreign preview in the clean case.
+
+Run the verifier in Checks. The unchanged base, seeded fault and clean
+control passed all six query checks locally. This verifies the case evidence.
+Reviewer detection and false alarms still need matched attempts on unseen cases.

@@ -66,11 +66,39 @@ tiny helpers into the actual operation. See the original
 Use the app's existing namespace and folder conventions, with matching test
 paths and Zeitwerk-compatible constant names. Group a capability where its
 owner is clear; avoid a parallel framework, generic `utils` dumping ground, or
-new folder for every class. Run the repository's autoload check when moving
-constants, such as `bin/rails zeitwerk:check` if supported by that app.
+new folder for every class.
 
 Test the public contract deeply: ordinary results, boundary values, malformed
 external inputs, invariants, partial failure and repeated execution where
 relevant. Keep tests resilient to internal rearrangement. Real database races,
 transaction behaviour and queue delivery need their own integration evidence;
 mocked calls cannot establish them.
+
+### Move an existing class into a namespace
+
+In an app with `app/presenters` as a standard autoload root, move an existing
+note heading presenter into the notes namespace without changing its interface:
+
+| | Before | After |
+| --- | --- | --- |
+| File | `app/presenters/note_heading.rb` | `app/presenters/notes/note_heading.rb` |
+| Constant | `NoteHeading` | `Notes::NoteHeading` |
+| Focused test | `test/presenters/note_heading_test.rb` | `test/presenters/notes/note_heading_test.rb` |
+| View call | `NoteHeading.call(@note)` | `Notes::NoteHeading.call(@note)` |
+
+Find references to the old constant, including templates and string lookups.
+Preserve the focused test's input and expected output as you update the
+reference it calls. Keep the request test on the same route and assert the
+rendered heading. Run both tests before and after the move and run the
+autoload check. In a Rails app using Minitest with these paths:
+
+```sh
+bin/rails zeitwerk:check
+bin/rails test test/presenters/notes/note_heading_test.rb test/integration/note_heading_test.rb
+```
+
+Moving only the file fails eager loading because Zeitwerk expects
+`Notes::NoteHeading`. Leaving the view on `NoteHeading` can pass eager loading
+and the focused test, then fail when a request renders the template.
+Check the app's configured roots and inflections when deriving the constant.
+See the [Rails autoloading guide](https://guides.rubyonrails.org/v8.1/autoloading_and_reloading_constants.html#project-structure).

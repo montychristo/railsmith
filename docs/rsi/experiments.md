@@ -183,3 +183,18 @@ foreign preview in the clean case.
 Run the verifier in Checks. The unchanged base, seeded fault and clean
 control passed all six query checks locally. This verifies the case evidence.
 Reviewer detection and false alarms still need matched attempts on unseen cases.
+
+## RSI-011 — 2026-11-21 — exercise callers after a namespace move
+
+At `8a0e73a`, the architecture reference advised an autoload check for
+constant moves. A disposable Rails 8.1.4.1 app using Zeitwerk 2.8.3 passed eager
+loading, the focused presenter test and the request test before and after
+moving `NoteHeading` to `Notes::NoteHeading`.
+
+Moving only the file failed eager loading. Moving the file and constant but
+leaving the old view call passed eager loading and the focused test. The
+request then failed with an uninitialized constant in the view.
+
+Keep both checks in the [worked move](../../core/references/rails-architecture.md#move-an-existing-class-into-a-namespace).
+The exercise covered one presenter and its view caller. Reassess when a move
+involves class names persisted outside the source tree.
